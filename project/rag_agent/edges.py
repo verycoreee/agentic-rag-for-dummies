@@ -27,9 +27,8 @@ def route_after_orchestrator_call(state: AgentState) -> Literal["tools", "fallba
         log_route("after_orchestrator_call", decision, state)
         return decision
 
-    # The counters already include the current LLM response. Allow a final
-    # answer at the iteration boundary, but do not execute tool calls that
-    # would exceed the configured research budget.
+    # 计数器已经包含了当前这次 LLM 响应。允许在迭代边界处给出最终
+    # 答案，但不执行会超出已配置研究预算的工具调用。
     if iteration >= MAX_ITERATIONS or tool_count > MAX_TOOL_CALLS:
         decision = "fallback_response"
         log_route("after_orchestrator_call", decision, state)

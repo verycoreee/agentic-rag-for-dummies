@@ -14,7 +14,7 @@ def append_unique(existing: List[str], new: List[str]) -> List[str]:
     return list(dict.fromkeys(existing + new))
 
 class State(MessagesState):
-    """State for main agent graph"""
+    """主 agent 图的状态"""
     questionIsClear: bool = False
     conversation_summary: str = ""
     originalQuery: str = ""
@@ -24,7 +24,7 @@ class State(MessagesState):
     agent_answers: Annotated[List[dict], accumulate_or_reset] = []
 
 class AgentState(MessagesState):
-    """State for individual agent subgraph"""
+    """单个 agent 子图的状态"""
     question: str = ""
     question_index: int = 0
     context_summary: str = ""

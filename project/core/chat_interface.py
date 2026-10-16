@@ -11,7 +11,7 @@ SYSTEM_NODE_CONFIG = {
     "summarize_history": {"title": "📋 Chat History Summary"},
 }
 
-# --- Helpers ---
+# --- 辅助函数 ---
 
 def make_message(content, *, title=None, node=None):
     msg = {"role": "assistant", "content": content}
@@ -52,7 +52,7 @@ def format_rewrite_content(buffer):
             lines.append(f"\nClarification needed: *{clarification}*")
     return "\n".join(lines)
 
-# --- End of Helpers ---
+# --- 辅助函数结束 ---
 
 class ChatInterface:
 
@@ -60,7 +60,7 @@ class ChatInterface:
         self.rag_system = rag_system
 
     def _handle_system_node(self, chunk, node, response_messages, system_node_buffer):
-        """Update (or create) the collapsible system-node message and surface any clarification."""
+        """更新（或创建）可折叠的系统节点消息，并把澄清内容展示出来。"""
         system_node_buffer[node] = system_node_buffer.get(node, "") + chunk.content
         buffer = system_node_buffer[node]
         title  = SYSTEM_NODE_CONFIG[node]["title"]
@@ -76,7 +76,7 @@ class ChatInterface:
             self._surface_clarification(buffer, response_messages)
 
     def _surface_clarification(self, buffer, response_messages):
-        """If the query is unclear, add/update a plain clarification message."""
+        """若查询不清晰，则添加/更新一条普通的澄清消息。"""
         data          = parse_rewrite_json(buffer) or {}
         clarification = data.get("clarification_needed", "")
         if not data.get("is_clear") and clarification.strip().lower() not in ("", "no"):
@@ -87,7 +87,7 @@ class ChatInterface:
                 response_messages[cidx]["content"] = clarification
 
     def _handle_tool_call(self, chunk, response_messages, active_tool_calls):
-        """Register new tool calls as collapsible messages."""
+        """把新的工具调用注册为可折叠的消息。"""
         for tc in chunk.tool_calls:
             if tc.get("id") and tc["id"] not in active_tool_calls:
                 response_messages.append(
@@ -96,7 +96,7 @@ class ChatInterface:
                 active_tool_calls[tc["id"]] = len(response_messages) - 1
 
     def _handle_tool_result(self, chunk, response_messages, active_tool_calls):
-        """Fill in the tool result inside the matching collapsible message."""
+        """把工具结果填入对应的可折叠消息中。"""
         idx = active_tool_calls.get(chunk.tool_call_id)
         if idx is not None:
             preview = str(chunk.content)[:300]
@@ -104,14 +104,14 @@ class ChatInterface:
             response_messages[idx]["content"] = f"```\n{preview}{suffix}\n```"
 
     def _handle_llm_token(self, chunk, node, response_messages):
-        """Append streaming LLM tokens to the last plain assistant message."""
+        """把流式输出的 LLM token 追加到最近一条普通助手消息上。"""
         last = response_messages[-1] if response_messages else None
         if not (last and last.get("role") == "assistant" and "metadata" not in last):
             response_messages.append(make_message(""))
         response_messages[-1]["content"] += chunk.content
 
     def chat(self, message, history):
-        """Generator that streams Gradio chat message dicts."""
+        """生成器：流式产出 Gradio 聊天消息字典。"""
         if not self.rag_system.agent_graph:
             yield "⚠️ System not initialized!"
             return

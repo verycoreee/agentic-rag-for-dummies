@@ -81,7 +81,7 @@ class ToolFactory:
             return output
     
     def create_tools(self) -> list:
-        """Create and return the list of tools."""
+        """创建并返回工具列表。"""
         search_tool = tool("search_child_chunks")(self._search_child_chunks)
         retrieve_tool = tool("retrieve_parent_chunks")(self._retrieve_parent_chunks)
         

@@ -7,9 +7,9 @@ sys.path.insert(0, os.path.dirname(__file__))
 from dotenv import load_dotenv
 load_dotenv(os.path.join(os.path.dirname(__file__), ".env"))
 
-# Suppress OTel "Failed to detach context" warning caused by generator/context interaction.
-# Tracing is unaffected.
-# Known bug: https://github.com/open-telemetry/opentelemetry-python/issues/2606
+# 抑制 OTel 因生成器/上下文交互产生的 "Failed to detach context" 警告。
+# 链路追踪不受影响。
+# 已知缺陷：https://github.com/open-telemetry/opentelemetry-python/issues/2606
 class _SuppressOtelDetachWarning(logging.Filter):
     def filter(self, record):
         return "Failed to detach context" not in record.getMessage()

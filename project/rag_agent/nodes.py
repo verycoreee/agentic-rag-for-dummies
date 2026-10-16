@@ -20,7 +20,7 @@ def _is_plain_conversation_message(msg) -> bool:
     )
 
 def _name_internal_message(message, name):
-    """Tag a subgraph-only message so it is not treated as chat history."""
+    """给仅属于子图的消息打标记，使其不被当作对话历史。"""
     return message.model_copy(update={"name": name})
 
 def _retrieval_contexts(messages) -> list[str]:
@@ -58,10 +58,9 @@ def _remove_messages_not_in(messages, keep_ids):
     return removals
 
 def _recent_conversation(messages, pending_query="") -> list:
-    """Return recent context before the current user message.
+    """返回当前用户消息之前的近期上下文。
 
-    During clarification, exclude the unresolved query and the assistant's
-    clarification request because they are represented explicitly.
+    澄清期间要排除尚未解决的查询和助手的澄清请求，因为它们已被显式表达。
     """
     plain_messages = [msg for msg in messages if _is_plain_conversation_message(msg)]
     recent_messages = plain_messages[:-1]
@@ -169,7 +168,7 @@ def rewrite_query(state: State, llm):
 def request_clarification(state: State):
     return {}
 
-# --- Agent Nodes ---
+# --- Agent 节点 ---
 def orchestrator(state: AgentState, llm_with_tools):
     context_summary = state.get("context_summary", "").strip()
     sys_msg = SystemMessage(content=get_orchestrator_prompt())
@@ -308,7 +307,7 @@ def collect_answer(state: AgentState):
             "contexts": state.get("retrieved_contexts", []),
         }]
     }
-# --- End of Agent Nodes---
+# --- Agent 节点结束 ---
 
 def aggregate_answers(state: State, llm):
     messages = state.get("messages", [])
