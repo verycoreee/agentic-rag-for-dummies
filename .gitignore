@@ -19,3 +19,6 @@ rag_evaluation_*.png
 notebooks/ragas_*.csv
 notebooks/rag_evaluation_*.csv
 notebooks/rag_evaluation_*.png
+.alma-snapshots
+.fastembed_cache/
+models/

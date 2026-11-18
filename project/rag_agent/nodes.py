@@ -5,7 +5,7 @@ from .graph_state import State, AgentState
 from .schemas import QueryAnalysis
 from .prompts import *
 from utils import estimate_context_tokens
-from config import BASE_TOKEN_THRESHOLD, CHILD_CHUNK_SEPARATOR, MAIN_HISTORY_MESSAGES_TO_KEEP, TOKEN_GROWTH_FACTOR
+from config import BASE_TOKEN_THRESHOLD, CHILD_CHUNK_SEPARATOR, MAIN_HISTORY_MESSAGES_TO_KEEP, TOKEN_GROWTH_FACTOR, STRUCTURED_OUTPUT_METHOD
 
 if MAIN_HISTORY_MESSAGES_TO_KEEP < 2:
     raise ValueError("MAIN_HISTORY_MESSAGES_TO_KEEP must be at least 2.")
@@ -136,7 +136,8 @@ def rewrite_query(state: State, llm):
         original_query = current_query
 
     context_section = "\n\n".join(context_parts)
-    llm_with_structure = llm.with_structured_output(QueryAnalysis)
+    _so_kwargs = {"method": STRUCTURED_OUTPUT_METHOD} if STRUCTURED_OUTPUT_METHOD else {}
+    llm_with_structure = llm.with_structured_output(QueryAnalysis, **_so_kwargs)
     response = llm_with_structure.invoke([SystemMessage(content=get_rewrite_query_prompt()), HumanMessage(content=context_section)])
     clarification_message_update = (
         [_name_internal_message(last_message, "clarification_response")]

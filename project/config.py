@@ -12,11 +12,23 @@ CHILD_COLLECTION = "document_child_chunks"
 SPARSE_VECTOR_NAME = "sparse"
 
 # --- 模型配置 ---
-DENSE_MODEL = "Qwen/Qwen3-Embedding-0.6B"
-SPARSE_MODEL = "Qdrant/bm25"
-LLM_MODEL = "granite4.1:8b"
-JUDGE_MODEL = "ministral-3:3b-instruct-2512-q8_0"
+# 支持填 HF 仓库名或本地模型目录（本地目录可完全离线，Windows 上快很多）
+DENSE_MODEL = os.environ.get("DENSE_MODEL", "Qwen/Qwen3-Embedding-0.6B")
+SPARSE_MODEL = os.environ.get("SPARSE_MODEL", "Qdrant/bm25")
+
+# LLM 提供方：ollama（本地，默认）| openai（任何 OpenAI 兼容端点）
+LLM_PROVIDER = os.environ.get("LLM_PROVIDER", "ollama").lower()
+LLM_MODEL = os.environ.get("LLM_MODEL", "granite4.1:8b")
+OPENAI_BASE_URL = os.environ.get("OPENAI_BASE_URL", "")
+OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY", "not-needed")
+# 大模型输出上限，留空则用提供方默认值
+LLM_MAX_TOKENS = int(os.environ.get("LLM_MAX_TOKENS", "0")) or None
+
+JUDGE_MODEL = os.environ.get("JUDGE_MODEL", "ministral-3:3b-instruct-2512-q8_0")
 LLM_TEMPERATURE = 0
+# 结构化输出方式：留空用 LangChain 默认（json_schema）；
+# 部分 OpenAI 兼容端点只支持工具调用，这时填 function_calling
+STRUCTURED_OUTPUT_METHOD = os.environ.get("STRUCTURED_OUTPUT_METHOD", "").strip() or None
 LLM_SEED = 42
 
 # --- 检索配置 ---

@@ -59,9 +59,13 @@ class ChatInterface:
     def __init__(self, rag_system):
         self.rag_system = rag_system
 
-    def _handle_system_node(self, chunk, node, response_messages, system_node_buffer):
-        """更新（或创建）可折叠的系统节点消息，并把澄清内容展示出来。"""
-        system_node_buffer[node] = system_node_buffer.get(node, "") + chunk.content
+    def _handle_system_node(self, text, node, response_messages, system_node_buffer):
+        """更新（或创建）可折叠的系统节点消息，并把澄清内容展示出来。
+
+        ``text`` 是流式片段拼起来的文本：普通 content 模式直接是文本；
+        function_calling 结构化输出模式下则是 tool_call 参数的 JSON 片段。
+        """
+        system_node_buffer[node] = system_node_buffer.get(node, "") + text
         buffer = system_node_buffer[node]
         title  = SYSTEM_NODE_CONFIG[node]["title"]
         content = format_rewrite_content(buffer) if node == "rewrite_query" else buffer
@@ -134,8 +138,14 @@ class ChatInterface:
             for chunk, metadata in self.rag_system.agent_graph.stream(stream_input, config=config, stream_mode="messages"):
                 node = metadata.get("langgraph_node", "")
 
-                if node in SYSTEM_NODES and isinstance(chunk, AIMessageChunk) and chunk.content:
-                    self._handle_system_node(chunk, node, response_messages, system_node_buffer)
+                if node in SYSTEM_NODES and isinstance(chunk, AIMessageChunk):
+                    text = chunk.content or ""
+                    # function_calling 模式下结构化结果在 tool_call 参数里，content 为空
+                    for _tc in (getattr(chunk, "tool_call_chunks", None) or []):
+                        text += _tc.get("args") or ""
+                    if not text:
+                        continue
+                    self._handle_system_node(text, node, response_messages, system_node_buffer)
 
                 elif hasattr(chunk, "tool_calls") and chunk.tool_calls:
                     self._handle_tool_call(chunk, response_messages, active_tool_calls)

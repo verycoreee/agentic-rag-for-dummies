@@ -1,5 +1,4 @@
 import uuid
-from langchain_ollama import ChatOllama
 import config
 from db.vector_db_manager import VectorDbManager
 from db.parent_store_manager import ParentStoreManager
@@ -7,6 +6,35 @@ from document_chunker import DocumentChunker
 from rag_agent.tools import ToolFactory
 from rag_agent.graph import create_agent_graph
 from core.observability import Observability
+
+def _build_llm():
+    """按 config.LLM_PROVIDER 构造对话模型。
+
+    - ``openai``：任何兼容 OpenAI Chat Completions 的端点（本地网关、DeepSeek、Qwen、vLLM 等）
+    - ``ollama``：本地 Ollama（默认，与原实现一致）
+    """
+    if config.LLM_PROVIDER == "openai":
+        from langchain_openai import ChatOpenAI
+
+        kwargs = {
+            "model": config.LLM_MODEL,
+            "temperature": config.LLM_TEMPERATURE,
+            "api_key": config.OPENAI_API_KEY,
+        }
+        if config.OPENAI_BASE_URL:
+            kwargs["base_url"] = config.OPENAI_BASE_URL
+        if config.LLM_MAX_TOKENS:
+            kwargs["max_tokens"] = config.LLM_MAX_TOKENS
+        return ChatOpenAI(**kwargs)
+
+    from langchain_ollama import ChatOllama
+
+    return ChatOllama(
+        model=config.LLM_MODEL,
+        temperature=config.LLM_TEMPERATURE,
+        seed=config.LLM_SEED,
+    )
+
 
 class RAGSystem:
 
@@ -24,11 +52,7 @@ class RAGSystem:
         self.vector_db.create_collection(self.collection_name)
         collection = self.vector_db.get_collection(self.collection_name)
 
-        llm = ChatOllama(
-            model=config.LLM_MODEL,
-            temperature=config.LLM_TEMPERATURE,
-            seed=config.LLM_SEED,
-        )
+        llm = _build_llm()
         tools = ToolFactory(collection).create_tools()
         self.agent_graph = create_agent_graph(llm, tools)
 
